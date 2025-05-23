@@ -23,17 +23,24 @@ public class Missatge {
 
     public static String getMissatgeConectar(String nom) {
         return CODI_CONECTAR + "#" + nom;
+
     }
 
     public static String getCodiMissatge(String missatgeRaw) {
         String msg = missatgeRaw.trim();
-        if (msg.isEmpty() || msg.indexOf("#") == -1) return null;
+        if (msg.isEmpty() || msg.indexOf("#") == -1) {
+            System.out.println("WARN: missatge buit o incorrecte");
+            return null;
+        }
         return msg.split("#")[0];
     }
 
     public static String[] getPartsMissatge(String missatgeRaw) {
         String msg = missatgeRaw.trim();
-        if (msg.isEmpty() || msg.indexOf("#") == -1) return null;
+        if (msg.isEmpty() || msg.indexOf("#") == -1) {
+            System.out.println("WARN: missatge buit o incorrecte");
+            return null;
+        }
         return msg.split("#");
     }
 }

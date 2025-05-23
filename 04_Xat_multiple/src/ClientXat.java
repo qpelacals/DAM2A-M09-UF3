@@ -13,18 +13,26 @@ public class ClientXat {
     private boolean sortir = false;
 
     public void connecta() throws IOException {
-        socket = new Socket(ServidorXat.HOST, ServidorXat.PORT);
-        ois = new ObjectInputStream(socket.getInputStream()); // PRIMER input
-        oos = new ObjectOutputStream(socket.getOutputStream()); // DESPRÉS output
-        System.out.println("Client connectat a " + ServidorXat.HOST + ":" + ServidorXat.PORT);
-        System.out.println("Flux d'entrada i sortida creat.");
+        try {
+            socket = new Socket(ServidorXat.HOST, ServidorXat.PORT);
+            //ois = new ObjectInputStream(socket.getInputStream()); // PRIMER input
+            oos = new ObjectOutputStream(socket.getOutputStream()); // DESPRÉS output
+            System.out.println("Client connectat a " + ServidorXat.HOST + ":" + ServidorXat.PORT);
+            System.out.println("Flux d'entrada i sortida creat.");
+        } catch (IOException e) {
+            System.err.println("Error connectant al servidor: " + e.getMessage());
+        }
     }
 
     public void enviarMissatge(String missatge) throws IOException {
-        if (oos != null) {
-            oos.writeObject(missatge);
-            oos.flush();
-            System.out.println("Enviant missatge: " + missatge);
+        try {
+            if (oos != null) {
+                oos.writeObject(missatge);
+                oos.flush();
+                System.out.println("Enviant missatge: " + missatge);
+            }
+        } catch (IOException e) {
+            System.err.println("Error enviant missatge: " + e.getMessage());
         }
     }
 
@@ -36,47 +44,54 @@ public class ClientXat {
 
             System.out.println("Tancant client...");
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error tancant el client: " + e.getMessage());
         }
     }
 
     public void llegir() {
         //new Thread(() -> {
-            try {
-                //ois = new ObjectInputStream(socket.getInputStream());
-                System.out.println("DEBUG: Iniciant rebuda de missatges...");
-                while (!sortir) {
-                    String missatge = (String) ois.readObject();
-                    String codi = Missatge.getCodiMissatge(missatge);
-                    System.out.println(codi);
-                    String[] parts = Missatge.getPartsMissatge(missatge);
+        try {
+            ois = new ObjectInputStream(socket.getInputStream());
+            System.out.println("DEBUG: Iniciant rebuda de missatges...");
+            while (!sortir) {
+                String missatge = (String) ois.readObject();
+                String codi = Missatge.getCodiMissatge(missatge);
+                String[] parts = Missatge.getPartsMissatge(missatge);
 
-                    if (codi == null) {
-                        System.out.println("ERROR: Missatge null.");
-                        continue;
-                    }
+                if (codi == null) {
+                    System.out.println("ERROR: Missatge null.");
+                    continue;
+                }
 
-                    switch (codi) {
-                        case Missatge.CODI_SORTIR_TOTS:
-                            sortir = true;
-                            System.out.println("DEBUG: Tancant client...");
-                            break;
-                        case Missatge.CODI_MSG_PERSONAL:
+                switch (codi) {
+                    case Missatge.CODI_SORTIR_TOTS:
+                        sortir = true;
+                        System.out.println("DEBUG: Tancant client...");
+                        break;
+                    case Missatge.CODI_MSG_PERSONAL:
+                        if (parts.length >= 3) {
                             System.out.println("Missatge de (" + parts[1] + "): " + parts[2]);
-                            break;
-                        case Missatge.CODI_MSG_GRUP:
+                        } else {
+                            System.out.println("ERROR: Missatge personal mal format.");
+                        }
+                        break;
+                    case Missatge.CODI_MSG_GRUP:
+                        if (parts.length >= 2) {
                             System.out.println("Missatge de grup: " + parts[1]);
                             break;
-                        default:
-                            System.out.println("ERROR: codi desconegut");
-                    }
+                        } else {
+                            System.out.println("ERROR: Missatge de grup mal format.");
+                        }
+                    default:
+                        System.out.println("ERROR: codi desconegut");
                 }
-            } catch (Exception e) {
-                System.out.println("Error rebent missatge. Sortint...");
-                e.printStackTrace();
-            } finally {
-                tancarClient();
             }
+        } catch (Exception e) {
+            System.out.println("Error rebent missatge. Sortint...");
+            e.printStackTrace();
+        } finally {
+            tancarClient();
+        }
         //}).start();
     }
 
@@ -126,7 +141,8 @@ public class ClientXat {
                 switch (opcio) {
                     case "1":
                         String nom = client.getLinea(sc, "Introdueix el nom: ", true);
-                        client.enviarMissatge(Missatge.getMissatgeConectar(nom));
+                        String missatgeConectar = Missatge.getMissatgeConectar(nom);
+                        client.enviarMissatge(missatgeConectar);
                         break;
                     case "2":
                         String dest = client.getLinea(sc, "Destinatari:: ", true);
