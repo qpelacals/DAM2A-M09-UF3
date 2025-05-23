@@ -26,14 +26,18 @@ public class Missatge {
     }
 
     public static String getCodiMissatge(String missatgeRaw) {
-        String msg = missatgeRaw.trim();
-        if (msg.isEmpty() || msg.indexOf("#") == -1) return null;
-        return msg.split("#")[0];
+        if (missatgeRaw == null || missatgeRaw.trim().isEmpty() || !missatgeRaw.contains("#")) {
+            System.out.println("WARN: Missatge mal format");
+            return null;
+        }
+        return missatgeRaw.split("#")[0];
     }
 
     public static String[] getPartsMissatge(String missatgeRaw) {
-        String msg = missatgeRaw.trim();
-        if (msg.isEmpty() || msg.indexOf("#") == -1) return null;
-        return msg.split("#");
+        if (missatgeRaw == null || missatgeRaw.trim().isEmpty() || !missatgeRaw.contains("#")) {
+            System.out.println("WARN: Missatge mal format");
+            return null;
+        }
+        return missatgeRaw.split("#");
     }
 }
